@@ -17,6 +17,7 @@ library('knitr')
 library('mosaic')
 library('readr')
 library('dplyr')
+library('graphics')
 ```
 
 #The Data
@@ -35,14 +36,14 @@ By looking at the structure of the data, you can see that their are 397 observat
 
 
 Lets take a look at the first 6 records in the dataset
-```{r}
+```{r, warning=FALSE, message=FALSE}
 #A quick look at the data
 kable(head(raw_data2))
 ```
 
 #Creating a new dataframe
 I didn't have any use for the first attribute (X1), so I created a new dataframe that is exactly the same data but with the first row dropped.
-```{r}
+```{r, warning=FALSE, message=FALSE}
 #drop the first row
 rank <- raw_data2$rank
 discipline <- raw_data2$discipline
@@ -58,12 +59,49 @@ df2 <- data.frame(rank, discipline, yr_since_phd, yrs_service,sex, salary)
 kable(head(df2))
 ```
 
+#Linear Regression Scatterplots
+
+I started by exploring the data for relationships between variables by performing linear regression. 
+```{r, warning=FALSE, message=FALSE}
+#Create a scatterplot of years since phd vs salary
+
+plot(yr_since_phd, salary, main="Scatterplot of Years Since PhD vs Salary", 
+  	xlab="Years Since PhD ", ylab="Salary ")
+
+#Overlay the linear regression line
+abline(lm(salary~yr_since_phd), col="red")
+
+ 
+#Produce summary of linear regression
+reg1 <- lm(salary~yr_since_phd,data=df2)
+summary(reg1)
+```
+
+
+As you can see from the graph and the summary, the salary and years since phd are weakly positively correlated. This means that the more years since phd means a higher salary. 
+
+```{r, warning=FALSE, message=FALSE}
+
+#Scatter Plot of years of service vs salary
+plot(yrs_service, salary, main="Scatterplot of Years of Service vs Salary", 
+  	xlab="Years of Service ", ylab="Salary ")
+
+#Overlays the linear regression line
+abline(lm(salary~yrs_service), col="red")
+
+#Creates summary statistics
+reg2 <- lm(salary~yrs_service,data=df2) 
+summary(reg2)
+```
+
+Years of service agaisnt salary is slightly positively correlated as well. This means that the more years of service the higher the salary. In comparison Years since phd had a stronger relationship with salary than years of service did however both were very weak. 
+
 #Does longevity mean a bigger payday?
 I was interested in exploring whether or not the amount of years since obtaining a PhD or the amount of years of service affected the salary size for Professors. I created multiple graphs in an attempt to uncover any hidden trends. 
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 #scatter plot of the relationships between salary and years since obtaining a phd, colored by different rank and faceted by discipline
-ggplot(data= df2 ,aes(x=yr_since_phd, y=salary))+geom_point()+aes(colour = rank)+facet_wrap(~discipline) 
+ggplot(data= df2 ,aes(x=yr_since_phd, y=salary))+geom_point()+aes(colour = rank)+facet_wrap(~discipline)
 
 #line plot of the relationships between salary and years since obtaining a phd, colored by different rank and faceted by discipline
 ggplot(data= df2 ,aes(x=yr_since_phd, y=salary))+geom_line()+aes(colour = rank)+facet_wrap(~discipline) 
@@ -71,7 +109,7 @@ ggplot(data= df2 ,aes(x=yr_since_phd, y=salary))+geom_line()+aes(colour = rank)+
 
 
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 #scatterplot of the relationships between salary and years of service, colored by different rank and faceted by discipline
 ggplot(data= df2 ,aes(x= yrs_service , y=salary))+geom_point()+aes(colour = rank)+facet_wrap(~discipline) 
 
@@ -86,7 +124,7 @@ What I can conclude from these graphs is that generally, the more years of servi
 
 #Do Male Professors make more than Female Professors?
 Something else, I wanted to explore with this dataset was if Professor's sex had any bearing on the salary that they receive. I did this by splitting the dataset into male and female professors. I simply got the maximum, minimum, and the average of the salaries for both males and females then compared them via a bar plot. 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 #Filters the dataframe for only males
 male_sal <- df2 %>%
   filter(sex == 'Male')
@@ -114,14 +152,18 @@ min(female_sal$salary)
 #Average Salary for females
 mean(female_sal$salary)
 
+#Count of females
+count(female_sal)
 
+#Count of males
+count(male_sal)
 ```
 
 
-```{r}
+```{r,, warning=FALSE, message=FALSE}
 
 #bar plot of the relationships between salary and years since obtaining a phd, colored by different rank and faceted by discipline
 ggplot(data= df2 ,aes(x=rank, y= salary))+geom_point()+aes(colour = discipline)+facet_wrap(~sex) 
 ```
 
-As the calculations and the plot suggest, Male professors seem to make higher salaries than Female professors. The Male professor makes $14,088 more on average than their female counterparts. Meanwhile,the highest recorded salary also belonged to a male professor coming in at $231,545, an eyepopping $70,444 more than the largest female professor salary. 
+As the calculations and the plot suggest, Male professors seem to make higher salaries than Female professors. The Male professor makes $14,088 more on average than their female counterparts. Meanwhile,the highest recorded salary also belonged to a male professor coming in at $231,545, an eyepopping $70,444 more than the largest female professor salary. It is also noteworthy that their were 358 male Professors with PhD's and only 39 female Professors with PhD's.  
